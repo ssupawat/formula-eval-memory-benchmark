@@ -80,6 +80,21 @@ done
 - `usedMB` — Net memory used for Excel work (baseline subtracted)
 - `baselineMB` — Runtime overhead before work starts
 
+## Benchmark Environment
+
+Results obtained on the following system:
+
+| Component | Version |
+|-----------|---------|
+| **Hardware** | Apple M2, 8 cores, 16 GB RAM |
+| **OS** | macOS 26.2 (Darwin 25.2.0) |
+| **LibreOffice** | 26.2.1.2 |
+| **Node.js** | v25.6.0 |
+| **Python** | 3.12.8 |
+| **Container** | Podman 5.7.1 |
+
+**Note:** Max rows (1M) LibreOffice test was run natively (outside container) due to memory requirements (~3GB).
+
 ## Files
 
 | File | Description |
