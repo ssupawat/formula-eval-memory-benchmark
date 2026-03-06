@@ -5,6 +5,16 @@ import { readFileSync, writeFileSync } from "fs";
 const n = process.argv[2] || "10000";
 const inputPath = `/tmp/benchmark/test_${n}.xlsx`;
 
+// Extract row count for reporting
+let rowsReport;
+if (n === "max") {
+  rowsReport = 1048576;
+} else if (n.startsWith("2sheet_")) {
+  rowsReport = parseInt(n.replace("2sheet_", ""));
+} else {
+  rowsReport = parseInt(n);
+}
+
 // Measure baseline before any operations (matches LibreOffice methodology)
 const baseline = process.memoryUsage();
 
@@ -39,7 +49,7 @@ const baselineMB = (baseline.rss / 1024 / 1024).toFixed(1);
 const usedMB = ((peakRss - baseline.rss) / 1024 / 1024).toFixed(1);
 
 console.log(JSON.stringify({
-  rows: parseInt(n),
+  rows: rowsReport,
   peakTotalMB: parseFloat(peakTotalMB),
   usedMB: parseFloat(usedMB),
   baselineMB: parseFloat(baselineMB),

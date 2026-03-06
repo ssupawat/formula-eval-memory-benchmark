@@ -12,6 +12,17 @@ from openpyxl import load_workbook, Workbook
 n = sys.argv[1] if len(sys.argv) > 1 else "10000"
 input_path = Path(f"/tmp/benchmark/test_{n}.xlsx")
 
+# Determine timeout based on input size (10 minutes for max/large tests)
+timeout = 600 if n in ["max"] or "2sheet" in n else 120
+
+# Extract row count for reporting
+if n == "max":
+    rows_report = 1048576
+elif n.startswith("2sheet_"):
+    rows_report = int(n.replace("2sheet_", ""))
+else:
+    rows_report = int(n)
+
 input_dir = Path("/tmp/lo_mem_input")
 output_dir = Path("/tmp/lo_mem_output")
 input_dir.mkdir(exist_ok=True)
@@ -61,7 +72,7 @@ wb.save(tmp_in)
 proc = subprocess.run([
     "libreoffice", "--headless", "--convert-to", "xlsx",
     "--outdir", str(output_dir), str(tmp_in)
-], capture_output=True, timeout=120)
+], capture_output=True, timeout=timeout)
 
 # ── Load result ──
 tmp_out = output_dir / f"test_{n}.xlsx"
@@ -75,7 +86,7 @@ used_mb = (peak_rss - baseline_rss) / 1024 / 1024
 peak_mb = peak_rss / 1024 / 1024
 
 print(json.dumps({
-    "rows": int(n),
+    "rows": rows_report,
     "peakTotalMB": round(peak_mb, 1),
     "usedMB": round(used_mb, 1),  # net increase from baseline
     "baselineMB": round(baseline_rss / 1024 / 1024, 1),
