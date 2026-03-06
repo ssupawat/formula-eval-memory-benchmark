@@ -42,7 +42,11 @@ def get_process_tree_rss(pid):
     except (psutil.NoSuchProcess, psutil.AccessDenied):
         return 0
 
-# ── Baseline memory before anything ──
+# ── Copy input file BEFORE monitoring (setup overhead) ──
+tmp_in = input_dir / f"test_{n}.xlsx"
+shutil.copy(input_path, tmp_in)
+
+# ── Baseline memory before LibreOffice operation ──
 self_pid = psutil.Process()
 baseline_rss = get_process_tree_rss(self_pid.pid)
 
@@ -62,10 +66,6 @@ def memory_monitor():
 
 monitor_thread = threading.Thread(target=memory_monitor, daemon=True)
 monitor_thread.start()
-
-# ── Copy input file (no openpyxl needed) ──
-tmp_in = input_dir / f"test_{n}.xlsx"
-shutil.copy(input_path, tmp_in)
 
 # ── LibreOffice evaluate ──
 proc = subprocess.run([
