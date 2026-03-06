@@ -142,7 +142,3 @@ def get_process_tree_rss(pid):
         total += child.memory_info().rss
     return total
 ```
-
-## License
-
-MIT
