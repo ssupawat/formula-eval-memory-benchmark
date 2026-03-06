@@ -7,7 +7,7 @@ Uses psutil to track all processes in the process tree.
 import sys, subprocess, time, threading, json
 import psutil
 from pathlib import Path
-from openpyxl import load_workbook, Workbook
+import shutil
 
 n = sys.argv[1] if len(sys.argv) > 1 else "10000"
 input_path = Path(f"/tmp/benchmark/test_{n}.xlsx")
@@ -63,20 +63,15 @@ def memory_monitor():
 monitor_thread = threading.Thread(target=memory_monitor, daemon=True)
 monitor_thread.start()
 
-# ── Load workbook ──
-wb = load_workbook(input_path, read_only=False, data_only=False)
+# ── Copy input file (no openpyxl needed) ──
 tmp_in = input_dir / f"test_{n}.xlsx"
-wb.save(tmp_in)
+shutil.copy(input_path, tmp_in)
 
 # ── LibreOffice evaluate ──
 proc = subprocess.run([
     "libreoffice", "--headless", "--convert-to", "xlsx",
     "--outdir", str(output_dir), str(tmp_in)
 ], capture_output=True, timeout=timeout)
-
-# ── Load result ──
-tmp_out = output_dir / f"test_{n}.xlsx"
-wb2 = load_workbook(tmp_out, data_only=True)
 
 # ── Stop monitor ──
 stop_event.set()
