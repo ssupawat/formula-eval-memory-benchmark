@@ -82,18 +82,16 @@ done
 
 ## Benchmark Environment
 
-Results obtained on the following system:
+Results obtained in containerized environment:
 
 | Component | Version |
 |-----------|---------|
-| **Hardware** | Apple M2, 8 cores, 16 GB RAM |
-| **OS** | macOS 26.2 (Darwin 25.2.0) |
-| **LibreOffice** | 26.2.1.2 |
-| **Node.js** | v25.6.0 |
-| **Python** | 3.12.8 |
-| **Container** | Podman 5.7.1 |
-
-**Note:** Max rows (1M) LibreOffice test was run natively (outside container) due to memory requirements (~3GB).
+| **Host Hardware** | Apple M2, 8 cores, 16 GB RAM |
+| **Host OS** | macOS 26.2 (Darwin 25.2.0) |
+| **Container** | Podman 5.7.1, 8 GB memory limit |
+| **LibreOffice** | 7.4.7 (Debian bookworm) |
+| **Node.js** | v20.20.0 |
+| **Python** | 3.11.2 |
 
 ## Files
 
