@@ -100,11 +100,10 @@ for n in 10000 50000 100000 200000; do
     node measure_js.mjs $n
 done
 
-# Run LibreOffice benchmark (max rows) - SKIPPED (OOM)
-# Max rows test requires ~3GB RAM - skip for containerized benchmark
+# Run LibreOffice benchmark (max rows) - requires increased memory
 echo "=== LibreOffice Benchmark (Max Rows: 1,048,576) ==="
-echo "SKIPPED: Max rows test causes OOM in container (needs ~3GB)"
-echo "Local result: LibreOffice peak 2,931 MB (vs JS 873 MB = 3.4x ratio)"
+echo "Running LibreOffice benchmark with max rows..."
+python3 measure_lo.py max
 
 # Run JS benchmark (max rows)
 echo "=== JS Benchmark (Max Rows: 1,048,576) ==="

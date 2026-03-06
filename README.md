@@ -18,12 +18,11 @@ Rows     JS Peak (MB)    LibreOffice Peak (MB)    Ratio
 ```
 
 ```
-Max Rows (1 Sheet) - JS Only
+Max Rows (1 Sheet)
 
-Rows         JS Peak (MB)    Notes
-───────────────────────────────────────────────────
-1,048,576        875        LibreOffice OOM in container
-                           (requires ~3GB when run locally)
+Rows         JS Peak (MB)    LibreOffice Peak (MB)    Ratio
+──────────────────────────────────────────────────────────────
+1,048,576        874               1,425                1.6x
 ```
 
 ```
