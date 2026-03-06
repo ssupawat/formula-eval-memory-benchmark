@@ -26,6 +26,9 @@ function updatePeak() {
   if (current > peakRss) peakRss = current;
 }
 
+// Start timing
+const startTime = performance.now();
+
 // Load and parse file
 const buffer = readFileSync(inputPath);
 updatePeak();
@@ -47,10 +50,12 @@ updatePeak();
 const peakTotalMB = (peakRss / 1024 / 1024).toFixed(1);
 const baselineMB = (baseline.rss / 1024 / 1024).toFixed(1);
 const usedMB = ((peakRss - baseline.rss) / 1024 / 1024).toFixed(1);
+const elapsedSeconds = ((performance.now() - startTime) / 1000).toFixed(2);
 
 console.log(JSON.stringify({
   rows: rowsReport,
   peakTotalMB: parseFloat(peakTotalMB),
   usedMB: parseFloat(usedMB),
   baselineMB: parseFloat(baselineMB),
+  timeSeconds: parseFloat(elapsedSeconds),
 }));

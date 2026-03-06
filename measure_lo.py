@@ -68,10 +68,12 @@ monitor_thread = threading.Thread(target=memory_monitor, daemon=True)
 monitor_thread.start()
 
 # ── LibreOffice evaluate ──
+start_time = time.time()
 proc = subprocess.run([
     "libreoffice", "--headless", "--convert-to", "xlsx",
     "--outdir", str(output_dir), str(tmp_in)
 ], capture_output=True, timeout=timeout)
+elapsed_seconds = time.time() - start_time
 
 # ── Stop monitor ──
 stop_event.set()
@@ -85,4 +87,5 @@ print(json.dumps({
     "peakTotalMB": round(peak_mb, 1),
     "usedMB": round(used_mb, 1),  # net increase from baseline
     "baselineMB": round(baseline_rss / 1024 / 1024, 1),
+    "timeSeconds": round(elapsed_seconds, 2),
 }))

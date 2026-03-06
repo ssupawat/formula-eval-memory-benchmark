@@ -1,38 +1,40 @@
 # Memory Benchmark: LibreOffice vs JS xlsx-calc
 
-A comparison of peak memory usage between LibreOffice and JavaScript (SheetJS + xlsx-calc) for Excel formula evaluation.
+A comparison of peak memory usage and evaluation time between LibreOffice and JavaScript (SheetJS + xlsx-calc) for Excel formula evaluation.
 
-## Key Finding
+## Key Findings
 
-LibreOffice uses approximately **1.2-2.4x more peak memory** than JavaScript. The gap narrows at larger scales for single-sheet workbooks, but remains ~2x for multi-sheet workbooks.
+**Memory:** LibreOffice uses approximately **1.2-2.4x more peak memory** than JavaScript.
+
+**Time:** JavaScript is **1.5-7x faster** for most workloads. LibreOffice is faster only for very large single-sheet files (1M+ rows).
 
 ```
 Standard Tests (1 Sheet)
 
-Rows     JS Peak (MB)    LibreOffice Peak (MB)    Ratio
-────────────────────────────────────────────────────────
- 10K        109               222                2.0x
- 50K        158               223                1.4x
-100K        219               283                1.3x
-200K        339               405                1.2x
+Rows     JS Time (s)    LO Time (s)    Time Ratio    JS Peak (MB)    LO Peak (MB)    Memory Ratio
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+ 10K        0.14            1.01           7.2x            109               222                2.0x
+ 50K        0.46            0.88           1.9x            158               223                1.4x
+100K        0.91            1.45           1.6x            219               283                1.3x
+200K        1.93            2.04           1.1x            339               405                1.2x
 ```
 
 ```
 Max Rows (1 Sheet)
 
-Rows         JS Peak (MB)    LibreOffice Peak (MB)    Ratio
-──────────────────────────────────────────────────────────────
-1,048,576        874               1,425                1.6x
+Rows         JS Time (s)    LO Time (s)    Time Ratio    JS Peak (MB)    LO Peak (MB)    Memory Ratio
+────────────────────────────────────────────────────────────────────────────────────────────────────────
+1,048,576       11.43            9.59           0.8x            874               1,425                1.6x
 ```
 
 ```
 Two Sheets (Cross-Sheet References)
 
-Rows     JS Peak (MB)    LibreOffice Peak (MB)    Ratio
-────────────────────────────────────────────────────────
- 10K        108               233                2.1x
-100K        189               376                2.0x
-500K        494             1,186                2.4x
+Rows     JS Time (s)    LO Time (s)    Time Ratio    JS Peak (MB)    LO Peak (MB)    Memory Ratio
+────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 10K        0.12            0.69           5.8x            108               233                2.1x
+100K        0.78            1.81           2.3x            189               376                2.0x
+500K        4.74            7.04           1.5x            494             1,186                2.4x
 ```
 
 ## Quick Start (Docker/Podman)
@@ -73,12 +75,13 @@ done
 ## Output Format
 
 ```json
-{"rows": 10000, "peakTotalMB": 261.4, "usedMB": 238.0, "baselineMB": 23.4}
+{"rows": 10000, "peakTotalMB": 233.1, "usedMB": 221.2, "baselineMB": 11.9, "timeSeconds": 1.01}
 ```
 
 - `peakTotalMB` — Peak RSS memory during operation
 - `usedMB` — Net memory used for Excel work (baseline subtracted)
 - `baselineMB` — Runtime overhead before work starts
+- `timeSeconds` — Wall-clock time for formula evaluation
 
 ## Benchmark Environment
 
