@@ -4,25 +4,26 @@ A comparison of peak memory usage between LibreOffice and JavaScript (SheetJS + 
 
 ## Key Finding
 
-LibreOffice uses approximately **2-4x more peak memory** than JavaScript, with the gap widening at scale and with multi-sheet workbooks.
+LibreOffice uses approximately **1.2-2.4x more peak memory** than JavaScript. The gap narrows at larger scales for single-sheet workbooks, but remains ~2x for multi-sheet workbooks.
 
 ```
 Standard Tests (1 Sheet)
 
 Rows     JS Peak (MB)    LibreOffice Peak (MB)    Ratio
 ────────────────────────────────────────────────────────
- 10K        106               261                2.5x
- 50K        162               315                1.9x
-100K        216               427                2.0x
-200K        339               724                2.1x
+ 10K        109               222                2.0x
+ 50K        158               223                1.4x
+100K        219               283                1.3x
+200K        339               405                1.2x
 ```
 
 ```
-Max Rows (1 Sheet)
+Max Rows (1 Sheet) - JS Only
 
-Rows         JS Peak (MB)    LibreOffice Peak (MB)    Ratio
-────────────────────────────────────────────────────────────
-1,048,576        873               2,931                3.4x
+Rows         JS Peak (MB)    Notes
+───────────────────────────────────────────────────
+1,048,576        875        LibreOffice OOM in container
+                           (requires ~3GB when run locally)
 ```
 
 ```
@@ -30,9 +31,9 @@ Two Sheets (Cross-Sheet References)
 
 Rows     JS Peak (MB)    LibreOffice Peak (MB)    Ratio
 ────────────────────────────────────────────────────────
- 10K        108               260                2.4x
-100K        169               529                3.1x
-500K        452             1,953                4.3x
+ 10K        108               233                2.1x
+100K        189               376                2.0x
+500K        494             1,186                2.4x
 ```
 
 ## Quick Start (Docker/Podman)
