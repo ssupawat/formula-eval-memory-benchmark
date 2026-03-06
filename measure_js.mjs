@@ -1,0 +1,46 @@
+import * as XLSX from "xlsx";
+import XLSX_CALC from "xlsx-calc";
+import { readFileSync, writeFileSync } from "fs";
+
+const n = process.argv[2] || "10000";
+const inputPath = `/tmp/benchmark/test_${n}.xlsx`;
+
+// Measure baseline before any operations (matches LibreOffice methodology)
+const baseline = process.memoryUsage();
+
+// Track peak RSS memory during operations (matches LibreOffice continuous monitoring)
+let peakRss = baseline.rss;
+
+function updatePeak() {
+  const current = process.memoryUsage().rss;
+  if (current > peakRss) peakRss = current;
+}
+
+// Load and parse file
+const buffer = readFileSync(inputPath);
+updatePeak();
+
+// Read workbook
+const wb = XLSX.read(buffer);
+updatePeak();
+
+// Evaluate formulas
+XLSX_CALC(wb);
+updatePeak();
+
+// Write output
+const out = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+writeFileSync(`/tmp/out_js_mem_${n}.xlsx`, out);
+updatePeak();
+
+// Report in same format as LibreOffice for fair comparison
+const peakTotalMB = (peakRss / 1024 / 1024).toFixed(1);
+const baselineMB = (baseline.rss / 1024 / 1024).toFixed(1);
+const usedMB = ((peakRss - baseline.rss) / 1024 / 1024).toFixed(1);
+
+console.log(JSON.stringify({
+  rows: parseInt(n),
+  peakTotalMB: parseFloat(peakTotalMB),
+  usedMB: parseFloat(usedMB),
+  baselineMB: parseFloat(baselineMB),
+}));
