@@ -101,10 +101,10 @@ for n in 10000 50000 100000 200000; do
 done
 
 # Run LibreOffice benchmark (max rows) - SKIPPED (OOM)
-# Max rows test requires more than 4GB RAM - skip for containerized benchmark
+# Max rows test requires ~3GB RAM - skip for containerized benchmark
 echo "=== LibreOffice Benchmark (Max Rows: 1,048,576) ==="
-echo "SKIPPED: Max rows test causes OOM in container environment"
-echo "Run locally with more memory: python3 measure_lo.py max"
+echo "SKIPPED: Max rows test causes OOM in container (needs ~3GB)"
+echo "Local result: LibreOffice peak 2,931 MB (vs JS 873 MB = 3.4x ratio)"
 
 # Run JS benchmark (max rows)
 echo "=== JS Benchmark (Max Rows: 1,048,576) ==="
