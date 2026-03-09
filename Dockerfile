@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-RUN pip3 install --break-system-packages openpyxl psutil duckdb pandas numexpr
+RUN pip3 install --break-system-packages openpyxl psutil duckdb pandas numexpr xlsx2csv xlsxwriter
 
 # Copy benchmark files first (for package.json)
 COPY measure_lo.py /app/
