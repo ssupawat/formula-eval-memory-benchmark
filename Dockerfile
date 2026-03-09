@@ -8,11 +8,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-RUN pip3 install --break-system-packages openpyxl psutil
+RUN pip3 install --break-system-packages openpyxl psutil duckdb pandas numexpr
 
 # Copy benchmark files first (for package.json)
 COPY measure_lo.py /app/
 COPY measure_js.mjs /app/
+COPY measure_duckdb.py /app/
+COPY lib/formula_evaluator.py /app/lib/formula_evaluator.py
 COPY docker-entrypoint.sh /app/
 
 # Create package.json and install Node dependencies locally

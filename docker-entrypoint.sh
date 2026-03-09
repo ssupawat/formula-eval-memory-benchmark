@@ -123,3 +123,22 @@ for n in 10000 100000 500000; do
     echo "Running JS benchmark with 2 sheets ($n rows)..."
     node measure_js.mjs 2sheet_$n
 done
+
+# Run DuckDB benchmark (standard)
+echo "=== DuckDB Benchmark (Standard) ==="
+for n in 10000 50000 100000 200000; do
+    echo "Running DuckDB benchmark with $n rows..."
+    python3 measure_duckdb.py $n
+done
+
+# Run DuckDB benchmark (max rows)
+echo "=== DuckDB Benchmark (Max Rows: 1,048,576) ==="
+echo "Running DuckDB benchmark with max rows..."
+python3 measure_duckdb.py max
+
+# Run DuckDB benchmark (2 sheets)
+echo "=== DuckDB Benchmark (2 Sheets) ==="
+for n in 10000 100000 500000; do
+    echo "Running DuckDB benchmark with 2 sheets ($n rows)..."
+    python3 measure_duckdb.py 2sheet_$n
+done

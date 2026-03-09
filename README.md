@@ -1,40 +1,40 @@
-# Memory Benchmark: LibreOffice vs JS xlsx-calc
+# Memory Benchmark: LibreOffice vs JS xlsx-calc vs DuckDB
 
-A comparison of peak memory usage and evaluation time between LibreOffice and JavaScript (SheetJS + xlsx-calc) for Excel formula evaluation.
+A comparison of peak memory usage and evaluation time between LibreOffice, JavaScript (SheetJS + xlsx-calc), and DuckDB for Excel formula evaluation.
 
 ## Key Findings
 
-**Memory:** LibreOffice uses approximately **1.2-2.4x more peak memory** than JavaScript.
+**Time:** DuckDB is **fastest** for all workloads - **10-80x faster than JavaScript** and **50-200x faster than LibreOffice**.
 
-**Time:** JavaScript is **1.5-7x faster** for most workloads. LibreOffice is faster only for very large single-sheet files (1M+ rows).
+**Memory:** LibreOffice uses approximately **1.2-2.4x more peak memory** than JavaScript. DuckDB memory grows with data size but remains competitive.
 
 ```
 Standard Tests (1 Sheet)
 
-Rows     JS Time (s)    LO Time (s)    Time Ratio    JS Peak (MB)    LO Peak (MB)    Memory Ratio
-───────────────────────────────────────────────────────────────────────────────────────────────────────
- 10K        0.14            1.01           7.2x            109               222                2.0x
- 50K        0.46            0.88           1.9x            158               223                1.4x
-100K        0.91            1.45           1.6x            219               283                1.3x
-200K        1.93            2.04           1.1x            339               405                1.2x
+Rows     DuckDB Time (s)    JS Time (s)    LO Time (s)    DuckDB Peak (MB)    JS Peak (MB)    LO Peak (MB)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 10K        0.011              0.14            1.01            115                  109               222
+ 50K        0.051              0.46            0.88            184                  158               223
+100K        0.106              0.91            1.45            273                  219               283
+200K        0.222              1.93            2.04            449                  339               405
 ```
 
 ```
 Max Rows (1 Sheet)
 
-Rows         JS Time (s)    LO Time (s)    Time Ratio    JS Peak (MB)    LO Peak (MB)    Memory Ratio
-────────────────────────────────────────────────────────────────────────────────────────────────────────
-1,048,576       11.43            9.59           0.8x            874               1,425                1.6x
+Rows         DuckDB Time (s)    JS Time (s)    LO Time (s)    DuckDB Peak (MB)    JS Peak (MB)    LO Peak (MB)
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1,048,576       0.914              11.43            9.59            1,320                  874             1,425
 ```
 
 ```
 Two Sheets (Cross-Sheet References)
 
-Rows     JS Time (s)    LO Time (s)    Time Ratio    JS Peak (MB)    LO Peak (MB)    Memory Ratio
-────────────────────────────────────────────────────────────────────────────────────────────────────────
- 10K        0.12            0.69           5.8x            108               233                2.1x
-100K        0.78            1.81           2.3x            189               376                2.0x
-500K        4.74            7.04           1.5x            494             1,186                2.4x
+Rows     DuckDB Time (s)    JS Time (s)    LO Time (s)    DuckDB Peak (MB)    JS Peak (MB)    LO Peak (MB)
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 10K        0.003              0.12            0.69            113                  108               233
+100K        0.028              0.78            1.81            268                  189               376
+500K        0.148              4.74            7.04            895                  494             1,186
 ```
 
 ## Quick Start (Docker/Podman)
@@ -49,13 +49,14 @@ podman run --rm lo-vs-xlsx-benchmark
 # Run individual tests
 podman run --rm lo-vs-xlsx-benchmark python3 measure_lo.py 10000
 podman run --rm lo-vs-xlsx-benchmark node measure_js.mjs 10000
+podman run --rm lo-vs-xlsx-benchmark python3 measure_duckdb.py 10000
 ```
 
 ## Manual Setup
 
 ```bash
 # Install dependencies
-pip install openpyxl psutil
+pip install openpyxl psutil duckdb pandas numexpr
 npm install xlsx xlsx-calc
 # LibreOffice: brew install libreoffice (macOS) or apt install libreoffice (Linux)
 
@@ -63,12 +64,14 @@ npm install xlsx xlsx-calc
 for n in 10000 50000 100000 200000; do
     python3 measure_lo.py $n
     node measure_js.mjs $n
+    python3 measure_duckdb.py $n
 done
 
 # Run 2-sheet tests
 for n in 10000 100000 500000; do
     python3 measure_lo.py 2sheet_$n
     node measure_js.mjs 2sheet_$n
+    python3 measure_duckdb.py 2sheet_$n
 done
 ```
 
@@ -95,6 +98,9 @@ Results obtained in containerized environment:
 | **LibreOffice** | 7.4.7 (Debian bookworm) |
 | **Node.js** | v20.20.0 |
 | **Python** | 3.11.2 |
+| **DuckDB** | 1.1.3 (with numexpr 2.10.1, pandas 2.2.3) |
+
+**Note:** DuckDB benchmarks run on macOS directly (not in container) for optimal performance.
 
 ## Files
 
@@ -102,5 +108,7 @@ Results obtained in containerized environment:
 |------|-------------|
 | `measure_lo.py` | LibreOffice measurement (includes child processes) |
 | `measure_js.mjs` | JS measurement with peak tracking |
+| `measure_duckdb.py` | DuckDB measurement with vectorized SQL evaluation |
+| `lib/formula_evaluator.py` | FormulaEvaluator library for complex formulas |
 | `Dockerfile` | Container image |
 | `docker-entrypoint.sh` | Automated benchmark script |
