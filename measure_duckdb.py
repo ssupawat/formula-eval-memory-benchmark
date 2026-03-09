@@ -190,21 +190,30 @@ def measure_benchmark(n: str) -> dict:
                     except Exception:
                         result = None
 
-    # Step 4: Write results to XLSX using xlsxwriter
-    workbook = xlsxwriter.Workbook(output_path)
+    # Step 4: Write results to XLSX using xlsxwriter with constant memory mode
+    workbook = xlsxwriter.Workbook(output_path, {'constant_memory': True})
 
     for sheet_name in wb.sheetnames:
         table_name = sheet_name.lower().replace(' ', '_')
 
-        # Get data from DuckDB
-        result_df = conn.execute(f"SELECT * FROM {table_name}").fetchdf()
-
         # Write to worksheet
         worksheet = workbook.add_worksheet(sheet_name)
 
-        for row_idx, row_data in enumerate(result_df.itertuples(index=False)):
-            for col_idx, value in enumerate(row_data):
-                worksheet.write(row_idx, col_idx, value)
+        # Stream data from DuckDB in chunks to avoid loading all into memory
+        result = conn.execute(f"SELECT * FROM {table_name}")
+        batch_size = 10000  # Process 10K rows at a time
+        row_idx = 0
+
+        while True:
+            # Fetch a batch of rows
+            batch = result.fetchdf(batch_size)
+            if len(batch) == 0:
+                break
+
+            for row_data in batch.itertuples(index=False):
+                for col_idx, value in enumerate(row_data):
+                    worksheet.write(row_idx, col_idx, value)
+                row_idx += 1
 
     workbook.close()
 
