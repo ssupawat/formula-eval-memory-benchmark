@@ -4,19 +4,21 @@ A comparison of peak memory usage and evaluation time between LibreOffice, JavaS
 
 ## Key Findings
 
-**Time:** DuckDB's **formula evaluation is extremely fast** - under 0.01s even for 1M rows. However, **streaming I/O dominates** the runtime.
+**Memory:** DuckDB uses **5-15x less memory** than JS and **10-20x less** than LibreOffice at scale.
 
-**Memory:** DuckDB uses **5-10x less memory** than JS and **10-20x less** than LibreOffice at scale.
+**Time:** JS is fastest for small datasets (<100K rows). DuckDB is competitive at larger scales. Formula evaluation itself is extremely fast (<0.02s even for 1M rows).
+
+**I/O dominates:** Streaming XLSX conversion (xlsx2csv + xlsxwriter) accounts for ~99% of DuckDB's runtime.
 
 ```
 Standard Tests (1 Sheet)
 
 Rows     DuckDB Time (s)    JS Time (s)    LO Time (s)    DuckDB Peak (MB)    JS Peak (MB)    LO Peak (MB)
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
- 10K        0.215              0.14            1.01             63                 109               222
- 50K        0.918              0.46            0.88             69                 158               223
-100K        1.709              0.91            1.45             70                 219               283
-200K        3.349              1.93            2.04             75                 339               405
+ 10K        0.23               0.12            2.24             69                 103               197
+ 50K        0.80               0.53            1.96             76                 161               242
+100K        1.56               0.91            1.64             78                 216               283
+200K        3.01               1.94            2.37             86                 407               406
 ```
 
 ```
@@ -24,7 +26,7 @@ Max Rows (1 Sheet)
 
 Rows         DuckDB Time (s)    JS Time (s)    LO Time (s)    DuckDB Peak (MB)    JS Peak (MB)    LO Peak (MB)
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-1,048,576       12.30             11.43            9.59            109                  874             1,425
+1,048,576       15.93             13.48            12.82            149                  889             1,426
 ```
 
 ```
@@ -32,38 +34,38 @@ Two Sheets (Cross-Sheet References)
 
 Rows     DuckDB Time (s)    JS Time (s)    LO Time (s)    DuckDB Peak (MB)    JS Peak (MB)    LO Peak (MB)
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
- 10K        0.250              0.12            0.69             69                 108               233
-100K        1.804              0.78            1.81             76                 189               376
-500K        9.028              4.74            7.04            112                  494             1,186
+ 10K        0.19               0.13            0.84             73                 106               233
+100K        1.51               0.88            1.79             82                 172               376
+500K        7.58               4.44            7.58            121                  491             1,186
 ```
 
 ## DuckDB Segment Timing Analysis
 
-The DuckDB benchmark now reports **segment-level timing** to identify bottlenecks:
+The DuckDB benchmark reports **segment-level timing** to identify bottlenecks:
 
 | Segment | Description | 100K rows | 1M rows | % of Total (1M) |
 |---------|-------------|-----------|---------|-----------------|
-| **xlsx2csv** | XLSX → CSV conversion | 0.79s | 6.15s | 50% |
-| **read_csv_auto** | CSV → DuckDB load | 0.04s | 0.08s | 0.7% |
-| **formula_apply** | Formula evaluation | 0.01s | 0.01s | 0.1% |
-| **xlsxwriter** | DuckDB → XLSX write | 0.87s | 6.06s | 49% |
+| **xlsx2csv** | XLSX → CSV conversion | 0.77s | 8.19s | 51% |
+| **read_csv_auto** | CSV → DuckDB load | 0.04s | 0.10s | 0.6% |
+| **formula_apply** | Formula evaluation | 0.01s | 0.02s | 0.1% |
+| **xlsxwriter** | DuckDB → XLSX write | 0.74s | 7.62s | 48% |
 
-**Key insight:** Formula evaluation scales exceptionally well (0.007s → 0.01s from 10K → 1M rows). The bottleneck is streaming I/O (xlsx2csv + xlsxwriter = ~99%), which is the cost of memory efficiency.
+**Key insight:** Formula evaluation scales exceptionally well. The bottleneck is streaming I/O (~99%), which is the cost of memory efficiency.
 
 ```
 Example output:
 {
   "rows": 100000,
   "segments": {
-    "xlsx2csv": 0.79,
-    "read_csv_auto": 0.04,
-    "formula_apply": 0.01,
-    "xlsxwriter": 0.87
+    "xlsx2csv": 0.771,
+    "read_csv_auto": 0.041,
+    "formula_apply": 0.008,
+    "xlsxwriter": 0.743
   },
-  "timeSeconds": 1.71,
-  "peakTotalMB": 70.3,
-  "usedMB": 27.3,
-  "baselineMB": 43.0
+  "timeSeconds": 1.56,
+  "peakTotalMB": 78.2,
+  "usedMB": 23.9,
+  "baselineMB": 54.3
 }
 ```
 
@@ -111,15 +113,15 @@ done
 {
   "rows": 10000,
   "segments": {
-    "xlsx2csv": 0.082,
-    "read_csv_auto": 0.033,
-    "formula_apply": 0.009,
-    "xlsxwriter": 0.090
+    "xlsx2csv": 0.095,
+    "read_csv_auto": 0.044,
+    "formula_apply": 0.015,
+    "xlsxwriter": 0.074
   },
-  "timeSeconds": 0.215,
-  "peakTotalMB": 63.1,
-  "usedMB": 19.7,
-  "baselineMB": 43.4
+  "timeSeconds": 0.227,
+  "peakTotalMB": 68.9,
+  "usedMB": 13.1,
+  "baselineMB": 55.9
 }
 ```
 
@@ -132,16 +134,17 @@ done
 
 ## Benchmark Environment
 
-Results obtained on macOS directly (not containerized):
+Results obtained in containerized environment:
 
 | Component | Version |
 |-----------|---------|
 | **Host Hardware** | Apple M2, 8 cores, 16 GB RAM |
 | **Host OS** | macOS 26.2 (Darwin 25.2.0) |
-| **Python** | 3.13.1 |
+| **Container** | Podman 5.7.1, 8 GB memory limit |
+| **LibreOffice** | 7.4.7 (Debian bookworm) |
+| **Node.js** | v20.20.0 |
+| **Python** | 3.11.2 |
 | **DuckDB** | 1.1.3 (with xlsx2csv 0.8.4, xlsxwriter 3.2.0) |
-
-**Note:** JS and LibreOffice results from previous container runs for comparison.
 
 ## Files
 
