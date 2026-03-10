@@ -56,7 +56,7 @@ podman run --rm lo-vs-xlsx-benchmark python3 measure_duckdb.py 10000
 
 ```bash
 # Install dependencies
-pip install openpyxl psutil duckdb pandas numexpr
+pip install openpyxl psutil duckdb xlsx2csv xlsxwriter
 npm install xlsx xlsx-calc
 # LibreOffice: brew install libreoffice (macOS) or apt install libreoffice (Linux)
 
@@ -98,7 +98,7 @@ Results obtained in containerized environment:
 | **LibreOffice** | 7.4.7 (Debian bookworm) |
 | **Node.js** | v20.20.0 |
 | **Python** | 3.11.2 |
-| **DuckDB** | 1.1.3 (with numexpr 2.10.1, pandas 2.2.3) |
+| **DuckDB** | 1.1.3 (with xlsx2csv 0.8.4, xlsxwriter 3.2.0) |
 
 **Note:** DuckDB benchmarks run on macOS directly (not in container) for optimal performance.
 
@@ -108,7 +108,7 @@ Results obtained in containerized environment:
 |------|-------------|
 | `measure_lo.py` | LibreOffice measurement (includes child processes) |
 | `measure_js.mjs` | JS measurement with peak tracking |
-| `measure_duckdb.py` | DuckDB measurement with vectorized SQL evaluation |
+| `measure_duckdb.py` | DuckDB measurement (xlsx2csv → read_csv_auto → SQL → xlsxwriter) |
 | `lib/formula_evaluator.py` | FormulaEvaluator library for complex formulas |
 | `Dockerfile` | Container image |
 | `docker-entrypoint.sh` | Automated benchmark script |
