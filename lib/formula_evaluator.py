@@ -16,7 +16,6 @@ Supported formula types:
 
 import re
 import duckdb
-import pandas as pd
 from typing import Any, Dict, List, Tuple, Optional, Union
 
 
