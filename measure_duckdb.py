@@ -117,9 +117,8 @@ def measure_benchmark(n: str) -> dict:
 
     for sheet_name in wb.sheetnames:
         csv_path = os.path.join(temp_dir, f"{sheet_name}.csv")
-        with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-            converter = Xlsx2csv(input_path, sheetname=sheet_name, outputfile=f)
-            converter.convert()
+        converter = Xlsx2csv(input_path, sheetname=sheet_name)
+        converter.convert(csv_path)
         csv_files[sheet_name] = csv_path
 
     # Step 2: Load CSVs into DuckDB using read_csv_auto
@@ -127,10 +126,13 @@ def measure_benchmark(n: str) -> dict:
 
     for sheet_name, csv_path in csv_files.items():
         table_name = sheet_name.lower().replace(' ', '_')
-        conn.execute(f"""
-            CREATE TABLE {table_name} AS
-            SELECT * FROM read_csv_auto('{csv_path}', header=False)
-        """)
+
+        # Load CSV and cast columns to DOUBLE (xlsx2csv outputs strings)
+        result = conn.execute(f"SELECT * FROM read_csv_auto('{csv_path}', header=False)")
+        columns = result.description
+        col_list = ', '.join([f'TRY_CAST("{col[0]}" AS DOUBLE) AS "{col[0]}"' for col in columns])
+
+        conn.execute(f"CREATE TABLE {table_name} AS SELECT {col_list} FROM read_csv_auto('{csv_path}', header=False)")
 
     # Step 3: Read formulas from Excel and evaluate
     evaluator = FormulaEvaluator(conn)
@@ -160,12 +162,12 @@ def measure_benchmark(n: str) -> dict:
             # Vectorized evaluation using SQL
             if pattern['type'] == 'simple':
                 parts = pattern['pattern'].split()
-                col1 = f"col{ord(parts[0]) - ord('A')}"
+                col1 = f"column{ord(parts[0]) - ord('A')}"
                 op = parts[1]
                 col2_or_val = parts[2]
 
                 if col2_or_val.isalpha():
-                    col2 = f"col{ord(col2_or_val) - ord('A')}"
+                    col2 = f"column{ord(col2_or_val) - ord('A')}"
                     expr = f'"{col1}" {op} "{col2}"'
                 else:
                     expr = f'"{col1}" {op} {col2_or_val}'
@@ -201,16 +203,16 @@ def measure_benchmark(n: str) -> dict:
 
         # Stream data from DuckDB in chunks to avoid loading all into memory
         result = conn.execute(f"SELECT * FROM {table_name}")
-        batch_size = 10000  # Process 10K rows at a time
-        row_idx = 0
 
+        # Fetch and write in batches
+        row_idx = 0
         while True:
-            # Fetch a batch of rows
-            batch = result.fetchdf(batch_size)
-            if len(batch) == 0:
+            # Fetch a batch of rows as list of tuples
+            batch = result.fetchmany(10000)
+            if not batch:
                 break
 
-            for row_data in batch.itertuples(index=False):
+            for row_data in batch:
                 for col_idx, value in enumerate(row_data):
                     worksheet.write(row_idx, col_idx, value)
                 row_idx += 1
